@@ -2,13 +2,17 @@
 
 This repo is a tool for automated semgentation masking. 
 
-It's born out of a recent [post by James Lee](https://x.com/JamesLee03/status/1777684860938928225) where he needed a help segmenting a very specific workflow.
-This is obviously a common problem in the world of animation, and often reqires custom solutions on a case-by-case basis.
+It's born out of a recent [post by James Lee](https://x.com/JamesLee03/status/1777684860938928225) where he needed help segmenting a very specific workflow.
+This is obviously a common problem in the world of animation, and often requires custom solutions on a case-by-case basis.
 That being said, I attempted to do something for this and found a workflow I think could be generalizable, so I'm making a tool for it.
 
 My very quick PoC is here:
 
-![video](readme-assets/output_masked.mp4)
+
+https://github.com/MathieuTuli/automated-segmentation-matting/assets/20361597/59b2d6a2-df77-4c97-a42b-514a05c932be
+
+
+
 
 ## the Idea
 
@@ -19,18 +23,18 @@ The workflow is simple
 3. Here is where you have a choice:
   - You could use those masks out of the box. This was done by Jordan in his [post](https://x.com/JordanPizza1/status/1778050334528553283)
   - You could use threshold the image and then use masks you care about to refine the prediction
-4. Iterate on the tresholding
+4. Iterate on the thresholding
 
 It's a dead simple workflow, but getting things working together requires some tuning and proper tooling would greatly help the process, so that's what this repo aims to do.
 You can see from my PoC that it works quite well for a very specific and detailed thing like teeth even.
 
 The tooling should also be able to:
 
-1. Apply different types of threshold to different masked areas
+1. Apply different types of thresholds to different masked areas
 2. Apply different stages of thresholding (threshold the thresholding)
 3. Apply other basic computer vision effects a user might want
 
-There's many ideas and ways you can take this, so I'm going to start simple. I have the code that generates the original PoC obviously but I'm not gonna upload yet cause it's messy, so stay tuned.
+There's many ideas and ways you can take this, so I'm going to start simple. I have the code that generates the original PoC obviously but I'm not gonna upload it yet cause it's messy, so stay tuned.
 If you're curious, the code basically looks like this:
 
 ```Python
