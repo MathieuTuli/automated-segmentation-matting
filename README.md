@@ -6,6 +6,8 @@ It's born out of a recent [post by James Lee](https://x.com/JamesLee03/status/17
 This is obviously a common problem in the world of animation, and often requires custom solutions on a case-by-case basis.
 That being said, I attempted to do something for this and found a workflow I think could be generalizable, so I'm making a tool for it.
 
+I'm aware that [Track Anything](https://github.com/gaomingqi/Track-Anything) exists, but I don't find it has all the features I want nor is it user-friendly. It still requires things like a python installation and a basic understanding of code and tuning of the parameters. My goal is to abstract all that away and (a) make something anyone can use, (b) make something with a more complete feature set, and (c) hopefully also improve on some of the computational burdens (I have a few ideas).
+
 My very quick PoC is here:
 
 
