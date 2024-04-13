@@ -4,39 +4,104 @@ import gi
 gi.require_version("Gtk", "4.0")
 gi.require_version('Adw', '1')
 
-from gi.repository import Gtk, Adw, GLib  # NOQA
+from gi.repository import Gtk, Adw, GLib, Gio  # NOQA
+
+
+class FrameNavigator(Gtk.Box):
+    def __init__(self, label: str = "", spacing: int = 12, *args, **kwargs):
+        super().__init__(orientation=Gtk.Orientation.VERTICAL,
+                         spacing=spacing,
+                         *args, **kwargs)
+        label = Gtk.Label(label=label)
+        self.frames_bp = Gtk.Button(label="Previous Frame")
+        self.frames_bn = Gtk.Button(label="Next Frame")
+        self.canvas = Gtk.Image()
+
+        box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        box.set_spacing(12)
+        box.append(self.frames_bp)
+        box.append(self.frames_bn)
+        self.append(label)
+        self.append(box)
+        self.append(self.canvas)
 
 
 class MainWindow(Gtk.ApplicationWindow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        # DEFAULTS
         self.set_default_size(600, 250)
         self.set_title("Main Window")
 
-        self.main = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-        self.upload_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
-        self.vis_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
-        self.effects_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
-        self.set_child(self.main)
-        self.main.append(self.upload_row)
-        self.main.append(self.vis_row)
-        self.main.append(self.effects_row)
-        self.main.set_spacing(12)
-        self.upload_row.set_spacing(12)
-        self.vis_row.set_spacing(12)
-        self.effects_row.set_spacing(12)
+        # LAYOUT
+        main = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        upload_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        vis_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        effects_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
 
+        main.set_spacing(12)
+        upload_row.set_spacing(12)
+        vis_row.set_spacing(12)
+        effects_row.set_spacing(12)
+
+        self.set_child(main)
+        main.append(upload_row)
+        main.append(vis_row)
+        main.append(effects_row)
+
+        # WINDOW
+        # self.win_ctrls = Gtk.WindowControls()
+        # main.append(self.win_ctrls)
+
+        # UPLOAD ROW
         self.video_upload = Gtk.FileDialog.new()
         self.video_upload.set_title("Select a File")
-        self.button = Gtk.Button(label="upload video")
-        self.button.connect('clicked', self.show_video_upload_dialog)
+        button = Gtk.Button(label="upload video")
+        button.connect('clicked', self.show_video_upload_dialog)
         self.spinner = Gtk.Spinner()
-        self.upload_row.append(self.button)
-        self.upload_row.append(self.spinner)
+        upload_row.append(button)
+        upload_row.append(self.spinner)
 
-        frames_label = Gtk.Label(label="Frames")
-        self.vis_row.append(frames_label)
+        # VIS ROW
+        vr_b1 = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        vr_b2 = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        vr_b1.set_spacing(12)
+        vr_b1.set_spacing(12)
+        vis_row.append(vr_b1)
+        vis_row.append(vr_b2)
+
+        raw_frame_nav = FrameNavigator("Original Frames")
+        proc_frame_nav = FrameNavigator("Processed Frames")
+        vr_b1.append(raw_frame_nav)
+        vr_b2.append(proc_frame_nav)
+
+        # EFFECTS ROw
+        er_b1 = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        er_b1.set_spacing(12)
+        effects_row.append(er_b1)
+
+        process_button = Gtk.Button(label="process")
+        # add_effect_button = Gtk.MenuButton(label="add effect")
+        er_b1.append(process_button)
+        # er_b1.append(add_effect_button)
+
+        # ACTION -------------------------------------------------------------
+        action = Gio.SimpleAction.new("something", None)
+        action.connect("activate", self.print_something)
+        self.add_action(action)
+        menu = Gio.Menu.new()
+        menu.append("Do Something", "win.something")
+        popover = Gtk.PopoverMenu()
+        popover.set_menu_model(menu)
+        hamburger = Gtk.MenuButton()
+        hamburger.set_popover(popover)
+        hamburger.set_icon_name("open-menu-symbolic")
+        er_b1.append(hamburger)
+        # --------------------------------------------------------------------
+
+    def print_something(self, action, param):
+        print("Something!")
 
     def show_video_upload_dialog(self, button):
         self.video_upload.open(self, None, self.open_video_upload_callback)
@@ -64,5 +129,5 @@ class ASMApp(Adw.Application):
 
 
 if __name__ == "__main__":
-    app = ASMApp(application_id="test")
+    app = ASMApp()
     app.run(sys.argv)
