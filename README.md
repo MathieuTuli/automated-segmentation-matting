@@ -13,7 +13,8 @@ My very quick PoC is here:
 
 https://github.com/MathieuTuli/automated-segmentation-matting/assets/20361597/59b2d6a2-df77-4c97-a42b-514a05c932be
 
-
+## Updates
+- I've decided to build this out in GTK: could've gone with Qt but for now I just want something simple and easy to get started.
 
 
 ## the Idea
