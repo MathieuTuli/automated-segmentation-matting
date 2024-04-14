@@ -7,8 +7,8 @@ gi.require_version('Adw', '1')  # NOQA
 
 from gi.repository import Gtk, Adw, GLib, Gio
 
-from .utils import get_frames, get_video_reading_dir
-from .cache import Cache
+from utils import get_frames, get_video_reading_dir
+from cache import Cache
 
 
 class FrameNavigator(Gtk.Box):
@@ -98,7 +98,7 @@ class MainWindow(Gtk.ApplicationWindow):
         menu.append("Do Something", "win.something")
         popover = Gtk.PopoverMenu()
         popover.set_menu_model(menu)
-        hamburger = Gtk.MenuButton(direction=Gtk.ArrowType.DOWN)
+        hamburger = Gtk.MenuButton(direction=Gtk.ArrowType.RIGHT)
         hamburger.set_popover(popover)
         hamburger.set_icon_name("list-add-symbolic")
         er_b1.append(hamburger)
