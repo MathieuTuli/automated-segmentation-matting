@@ -1,10 +1,14 @@
+from pathlib import Path
 import sys
 
 import gi
-gi.require_version("Gtk", "4.0")
-gi.require_version('Adw', '1')
+gi.require_version("Gtk", "4.0")  # NOQA
+gi.require_version('Adw', '1')  # NOQA
 
-from gi.repository import Gtk, Adw, GLib, Gio  # NOQA
+from gi.repository import Gtk, Adw, GLib, Gio
+
+from .utils import get_frames, get_video_reading_dir
+from .cache import Cache
 
 
 class FrameNavigator(Gtk.Box):
@@ -99,6 +103,7 @@ class MainWindow(Gtk.ApplicationWindow):
         hamburger.set_icon_name("open-menu-symbolic")
         er_b1.append(hamburger)
         # --------------------------------------------------------------------
+        self.cache = Cache()
 
     def print_something(self, action, param):
         print("Something!")
@@ -112,8 +117,13 @@ class MainWindow(Gtk.ApplicationWindow):
             if file is not None:
                 print(f"File path is {file.get_path()}")
                 self.spinner.start()
-                # TODO Handle loading file from here
+                fname = Path(file.get_path())
+                outdir = get_video_reading_dir(fname)
+                self.cache.video_dir = outdir
+                outdir.mkdir(parents=True)
+                get_frames(fname, outdir)
                 self.spinner.stop()
+                # TODO DISPLAY FIRST FRAME
         except GLib.Error as error:
             print(f"Error opening file: {error.message}")
 

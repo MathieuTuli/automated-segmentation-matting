@@ -1,7 +1,7 @@
+from pathlib import PosixPath, Path
+from datetime import datetime
 from typing import Optional
-from Pathlib import PosixPath
 
-import numpy as np
 import cv2
 
 
@@ -19,3 +19,14 @@ def get_frames(video_path: PosixPath, save_dir: Optional[PosixPath] = None):
         else:
             break
         count += 1
+    return frames
+
+
+def get_time_now():
+    return datetime.datetime.now().strftime("%Y_%m_%d_%Y_%M_%S")
+
+
+def get_video_reading_dir(fname: PosixPath):
+    root = Path("~/.cache/asm/videos").expanduser()
+    outdir = root / (fname.stem + "_" + get_time_now())
+    return outdir
