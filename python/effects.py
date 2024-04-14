@@ -15,7 +15,7 @@ def segmentation(frame: np.ndarray):
     raise NotImplementedError
 
 
-def get_threshold_mask(frame: np.ndarray, threshold: int = 80) -> np.ndarray:
+def get_threshold_mask(frame: np.ndarray, threshold: int) -> np.ndarray:
     _, mask = cv2.threshold(
             cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY), threshold, 1,
             cv2.THRESH_BINARY)

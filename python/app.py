@@ -33,6 +33,9 @@ class SegmentationWidget(Gtk.Box):
     def get_kwargs(self):
         raise NotImplementedError
 
+    def get_callable(self):
+        return segmentation
+
 
 class ThresholdWidget(Gtk.Box):
     def __init__(self, label: str = "", spacing: int = 12, *args, **kwargs):
@@ -43,12 +46,21 @@ class ThresholdWidget(Gtk.Box):
         self.append(Gtk.Label(label=label))
         self.entry = Gtk.Entry()
         self.entry.set_text("80")
+        self.delete = Gtk.Button(label="delete")
+        self.delete.connect('clicked', self.delete_button)
         self.append(self.entry)
+        self.append(self.delete)
+
+    def delete_button(self, button):
+        self.unparent()
 
     def get_kwargs(self):
         x = self.entry.get_text()
         x = float(x) if x.isnumeric() else 80
         return {"threshold": x}
+
+    def get_callable(self):
+        return get_threshold_mask
 
 
 class FrameNavigator(Gtk.Box):
@@ -193,7 +205,6 @@ class MainWindow(Gtk.ApplicationWindow):
         self.effects_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL,
                                    hexpand=True)
         effects_row.append(self.effects_box)
-        self.effects = list()
 
         # ACTION -------------------------------------------------------------
         # action = Gio.SimpleAction.new("something", None)
@@ -216,22 +227,23 @@ class MainWindow(Gtk.ApplicationWindow):
         outdir = CACHE.raw_dir.parent / (CACHE.raw_dir.stem + "-processed")
         outdir.mkdir(exist_ok=True, parents=True)
         CACHE.proc_dir = outdir
-        kwargs_list = [x.get_kwargs() for x in self.effects_box.observe_children()]
+        kwargs_list = [x.get_kwargs() for x in
+                       self.effects_box.observe_children()]
+        effects = [x.get_callable() for x in
+                   self.effects_box.observe_children()]
         self.proc_frame_nav.max_frames = process_video(
-                outdir, CACHE.raw_dir, self.effects, kwargs_list)
+                outdir, CACHE.raw_dir, effects, kwargs_list)
         self.proc_frame_nav.root = outdir
         self.proc_frame_nav.set_frame(
             get_image_fname(outdir, self.proc_frame_nav.frame))
 
     def add_segmentation_effect_button(self, button):
-        self.effects.append(segmentation)
         self.effects_box.append(SegmentationWidget(
-            label=f"{len(self.effects)}: segmentation "))
+            label="segmentation:"))
 
     def add_thresholding_effect_button(self, button):
-        self.effects.append(get_threshold_mask)
         self.effects_box.append(ThresholdWidget(
-            label=f"{len(self.effects)}: thresholding "))
+            label="thresholding:"))
 
     def show_video_upload_dialog(self, button):
         self.video_upload.open(self, None, self.open_video_upload_callback)
