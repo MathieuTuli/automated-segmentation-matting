@@ -1,3 +1,4 @@
 class Cache:
     def __init__(self):
-        self.video_dir = None
+        self.raw_video_dir = None
+        self.proc_video_dir = None
