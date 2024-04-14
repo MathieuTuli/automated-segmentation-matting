@@ -98,9 +98,9 @@ class MainWindow(Gtk.ApplicationWindow):
         menu.append("Do Something", "win.something")
         popover = Gtk.PopoverMenu()
         popover.set_menu_model(menu)
-        hamburger = Gtk.MenuButton()
+        hamburger = Gtk.MenuButton(direction=Gtk.ArrowType.DOWN)
         hamburger.set_popover(popover)
-        hamburger.set_icon_name("open-menu-symbolic")
+        hamburger.set_icon_name("list-add-symbolic")
         er_b1.append(hamburger)
         # --------------------------------------------------------------------
         self.cache = Cache()
