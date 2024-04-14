@@ -13,9 +13,42 @@ from utils import (
         get_image_fname,
         get_image_from_file
         )
+from effects import segmentation, get_threshold_mask, process_video
 from cache import Cache
 
 CACHE = Cache()
+
+
+class SegmentationWidget(Gtk.Box):
+    def __init__(self, label: str = "", spacing: int = 12, *args, **kwargs):
+        super().__init__(orientation=Gtk.Orientation.HORIZONTAL,
+                         spacing=spacing,
+                         hexpand=True,
+                         *args, **kwargs)
+        self.append(Gtk.Label(label=label))
+        self.entry = Gtk.Entry()
+        self.entry.set_text("80")
+        self.append(self.entry)
+
+    def get_kwargs(self):
+        raise NotImplementedError
+
+
+class ThresholdWidget(Gtk.Box):
+    def __init__(self, label: str = "", spacing: int = 12, *args, **kwargs):
+        super().__init__(orientation=Gtk.Orientation.HORIZONTAL,
+                         spacing=spacing,
+                         hexpand=True,
+                         *args, **kwargs)
+        self.append(Gtk.Label(label=label))
+        self.entry = Gtk.Entry()
+        self.entry.set_text("80")
+        self.append(self.entry)
+
+    def get_kwargs(self):
+        x = self.entry.get_text()
+        x = float(x) if x.isnumeric() else 80
+        return {"threshold": x}
 
 
 class FrameNavigator(Gtk.Box):
@@ -143,19 +176,23 @@ class MainWindow(Gtk.ApplicationWindow):
         er_b1.append(label)
 
         process_button = Gtk.Button(label="process video")
-        process_button.connect("clicked", self.process_video)
+        process_button.connect("clicked", self.process_video_button)
         er_b1.append(process_button)
 
         label = Gtk.Label(label="add effects:")
         er_b2.append(label)
 
-        segmentation_button = Gtk.Button(label="thresholding")
-        threshold_button = Gtk.Button(label="segmentation")
-        segmentation_button.connect("clicked", self.add_segmentation_effect)
-        threshold_button.connect("clicked", self.add_thresholding_effect)
+        threshold_button = Gtk.Button(label="thresholding")
+        segmentation_button = Gtk.Button(label="segmentation")
+        segmentation_button.connect(
+            "clicked", self.add_segmentation_effect_button)
+        threshold_button.connect(
+            "clicked", self.add_thresholding_effect_button)
         er_b2.append(segmentation_button)
         er_b2.append(threshold_button)
-
+        self.effects_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL,
+                                   hexpand=True)
+        effects_row.append(self.effects_box)
         self.effects = list()
 
         # ACTION -------------------------------------------------------------
@@ -175,14 +212,26 @@ class MainWindow(Gtk.ApplicationWindow):
     def print_something(self, action, param):
         print("Something!")
 
-    def process_video(self, button):
-        raise NotImplementedError
+    def process_video_button(self, button):
+        outdir = CACHE.raw_dir.parent / (CACHE.raw_dir.stem + "-processed")
+        outdir.mkdir(exist_ok=True, parents=True)
+        CACHE.proc_dir = outdir
+        kwargs_list = [x.get_kwargs() for x in self.effects_box.observe_children()]
+        self.proc_frame_nav.max_frames = process_video(
+                outdir, CACHE.raw_dir, self.effects, kwargs_list)
+        self.proc_frame_nav.root = outdir
+        self.proc_frame_nav.set_frame(
+            get_image_fname(outdir, self.proc_frame_nav.frame))
 
-    def add_thresholding_effect(self, button):
-        raise NotImplementedError
+    def add_segmentation_effect_button(self, button):
+        self.effects.append(segmentation)
+        self.effects_box.append(SegmentationWidget(
+            label=f"{len(self.effects)}: segmentation "))
 
-    def add_segmentation_effect(self, button):
-        raise NotImplementedError
+    def add_thresholding_effect_button(self, button):
+        self.effects.append(get_threshold_mask)
+        self.effects_box.append(ThresholdWidget(
+            label=f"{len(self.effects)}: thresholding "))
 
     def show_video_upload_dialog(self, button):
         self.video_upload.open(self, None, self.open_video_upload_callback)
@@ -197,7 +246,7 @@ class MainWindow(Gtk.ApplicationWindow):
                 self.spinner.start()
                 fname = Path(file.get_path())
                 outdir = get_video_reading_dir(fname)
-                CACHE.raw_video_dir = outdir
+                CACHE.raw_dir = outdir
                 frames = get_frames(fname, outdir)
                 self.raw_frame_nav.root = outdir
                 self.raw_frame_nav.max_frames = frames.shape[0] - 1
