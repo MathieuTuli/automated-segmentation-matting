@@ -67,6 +67,6 @@ def main():
 
 ## the final product
 
-~I'm not sure what format the tool will be. Currently, I'm thinking a desktop tool to avoid web latencies with large/high resolution videos. Plus, I can use ONNX Runtime or something to simplify the model stuff and improve performance perhaps and avoid having artists/end users deal with python or gradio god forbid. ~
+~I'm not sure what format the tool will be. Currently, I'm thinking a desktop tool to avoid web latencies with large/high resolution videos. Plus, I can use ONNX Runtime or something to simplify the model stuff and improve performance perhaps and avoid having artists/end users deal with python or gradio god forbid.~
 
 Okay I've decided it will be a web app for maximum cross-compatibility, and given how performant the models can be, this should be fine to run on any modern device. Plus I like web, and GTK kinda sucks to work with.
