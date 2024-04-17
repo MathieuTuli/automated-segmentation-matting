@@ -14,8 +14,12 @@ My very quick PoC is here:
 https://github.com/MathieuTuli/automated-segmentation-matting/assets/20361597/59b2d6a2-df77-4c97-a42b-514a05c932be
 
 ## updates
-- I've decided to build this out in GTK: could've gone with Qt but for now I just want something simple and easy to get started.
-  - For now, I will make a mvp in Python just to get things working and not have to deal with ONNX just yet. Once it's in a good state, I will convert to C++ and build out the app that can actually run without a need for Python as a dependency. And do proper design and control flow etc. etc.
+- ~I've decided to build this out in GTK: could've gone with Qt but for now I just want something simple and easy to get started.~
+  - ~For now, I will make a mvp in Python just to get things working and not have to deal with ONNX just yet. Once it's in a good state, I will convert to C++ and build out the app that can actually run without a need for Python as a dependency. And do proper design and control flow etc. etc.~
+- Okay the plan is still to make a python mvp, but I how performant the sam web demo was and decided to make this a web-app
+  - for segmentation, I'm still going to use [Segment Anything](https://github.com/facebookresearch/segment-anything)
+  - for segmentation tracking, I plan on using [XMem](https://github.com/hkchengrex/XMem) - I just need to test if it's web compatible
+    - if not, I'll probably need to find an alternative
 
 
 ## the idea
