@@ -21,6 +21,15 @@ https://github.com/MathieuTuli/automated-segmentation-matting/assets/20361597/59
   - for segmentation tracking, I plan on using [XMem](https://github.com/hkchengrex/XMem) - I just need to test if it's web compatible
     - if not, I'll probably need to find an alternative
 
+minimal MVP (enjoy the music)
+
+https://github.com/MathieuTuli/automated-segmentation-matting/assets/20361597/bc083b9a-39e3-462b-8b87-d33433260d9d
+
+features to add in the full product:
+- slider for thresholding instead input
+- slider for segmentation mask threshold rather than fixed (need to return logits from model)
+- XMem to track the mask across video frames (working but not shown in above video)
+- mask editing (mainly for the first SAM mask generated to then be tracked, but then to also refine per-frame masks if you want)
 
 ## the idea
 
