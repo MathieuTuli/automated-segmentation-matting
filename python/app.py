@@ -26,12 +26,16 @@ class SegmentationWidget(Gtk.Box):
                          hexpand=True,
                          *args, **kwargs)
         self.append(Gtk.Label(label=label))
-        self.entry = Gtk.Entry()
-        self.entry.set_text("80")
-        self.append(self.entry)
+        self.delete = Gtk.Button(label="delete")
+        self.delete.connect('clicked', self.delete_button)
+        self.append(self.delete)
+
+    def delete_button(self, button):
+        self.unparent()
 
     def get_kwargs(self):
-        raise NotImplementedError
+        # print(CACHE.prompts)
+        return {"prompts": CACHE.prompts}
 
     def get_callable(self):
         return segmentation
@@ -46,9 +50,9 @@ class ThresholdWidget(Gtk.Box):
         self.append(Gtk.Label(label=label))
         self.entry = Gtk.Entry()
         self.entry.set_text("80")
+        self.append(self.entry)
         self.delete = Gtk.Button(label="delete")
         self.delete.connect('clicked', self.delete_button)
-        self.append(self.entry)
         self.append(self.delete)
 
     def delete_button(self, button):
@@ -75,6 +79,11 @@ class FrameNavigator(Gtk.Box):
         self.frames_bp.connect('clicked', self.previous_frame)
         self.frames_bn.connect('clicked', self.next_frame)
         self.canvas = Gtk.Image(hexpand=True)
+
+        evk = Gtk.GestureClick.new()
+        evk.connect("pressed", self.canvas_click)
+        self.canvas.add_controller(evk)
+
         self.frame = 0
         self.root = None
         self.max_frames = None
@@ -92,6 +101,12 @@ class FrameNavigator(Gtk.Box):
         self.append(self.canvas)
 
         self.cwidth = None
+        self.cheight = None
+
+    def canvas_click(self, gesture, data, x, y):
+        print("Tracking point added @", x, y)
+        CACHE.prompts.append((self.frame, x / self.cwidth, y / self.cheight))
+        # print(CACHE.prompts)
 
     def previous_frame(self, button):
         self.frame = max(0, self.frame - 1)
@@ -109,7 +124,8 @@ class FrameNavigator(Gtk.Box):
         h, w, c = img.shape
         if self.cwidth is None:
             self.cwidth = self.canvas.get_width()
-        self.canvas.set_size_request(self.cwidth, int(self.cwidth * h / w))
+            self.cheight = int(self.cwidth * h / w)
+        self.canvas.set_size_request(self.cwidth, self.cheight)
 
 
 class MainWindow(Gtk.ApplicationWindow):
