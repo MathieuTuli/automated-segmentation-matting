@@ -10,7 +10,7 @@ from torch.nn import functional as F
 
 from typing import Tuple
 
-from ..model import Sam
+from model import Sam
 from .amg import calculate_stability_score
 
 
