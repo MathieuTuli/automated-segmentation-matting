@@ -1,4 +1,5 @@
 # CUSTOM
+**/tmp/**
 *.ini
 **/__pycache__/**
 **/ckpts/**

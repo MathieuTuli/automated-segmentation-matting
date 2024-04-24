@@ -987,6 +987,11 @@ function dbg(...args) {
 }
 // end include: runtime_debug.js
 // === Body ===
+
+function canvas_get_width() { return Module.canvas.width; }
+function canvas_get_height() { return Module.canvas.height; }
+function resizeCanvas() { js_resizeCanvas(); }
+
 // end include: preamble.js
 
 
@@ -4753,8 +4758,6 @@ function dbg(...args) {
 
   var _glfwSetWindowSize = (winid, width, height) => GLFW.setWindowSize(winid, width, height);
 
-  var _glfwSwapBuffers = (winid) => GLFW.swapBuffers(winid);
-
   
   var _glfwSwapInterval = (interval) => {
       interval = Math.abs(interval); // GLFW uses negative values to enable GLX_EXT_swap_control_tear, which we don't have, so just treat negative and positive the same.
@@ -4831,6 +4834,10 @@ var wasmImports = {
   __cxa_throw: ___cxa_throw,
   /** @export */
   abort: _abort,
+  /** @export */
+  canvas_get_height: canvas_get_height,
+  /** @export */
+  canvas_get_width: canvas_get_width,
   /** @export */
   emscripten_get_element_css_size: _emscripten_get_element_css_size,
   /** @export */
@@ -5006,8 +5013,6 @@ var wasmImports = {
   /** @export */
   glfwSetWindowSize: _glfwSetWindowSize,
   /** @export */
-  glfwSwapBuffers: _glfwSwapBuffers,
-  /** @export */
   glfwSwapInterval: _glfwSwapInterval,
   /** @export */
   glfwTerminate: _glfwTerminate,
@@ -5031,7 +5036,8 @@ var stackAlloc = createExportWrapper('stackAlloc');
 var _emscripten_stack_get_current = () => (_emscripten_stack_get_current = wasmExports['emscripten_stack_get_current'])();
 var ___cxa_is_pointer_type = createExportWrapper('__cxa_is_pointer_type');
 var dynCall_jiji = Module['dynCall_jiji'] = createExportWrapper('dynCall_jiji');
-
+var ___start_em_js = Module['___start_em_js'] = 219744;
+var ___stop_em_js = Module['___stop_em_js'] = 219850;
 
 // include: postamble.js
 // === Auto-generated postamble setup entry stuff ===

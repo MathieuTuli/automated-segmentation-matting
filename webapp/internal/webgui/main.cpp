@@ -110,7 +110,9 @@ void loop()
     ImGui::Render();
 
     int display_w, display_h;
-    // glfwMakeContextCurrent(g_window);
+#ifdef __EMSCRIPTEN__
+    glfwMakeContextCurrent(g_window);
+#endif
     glfwGetFramebufferSize(g_window, &display_w, &display_h);
     glViewport(0, 0, display_w, display_h);
     // glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
@@ -120,8 +122,11 @@ void loop()
                  clear_color.w);
     glClear(GL_COLOR_BUFFER_BIT);
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-    // glfwMakeContextCurrent(g_window);
+#ifdef __EMSCRIPTEN__
+    glfwMakeContextCurrent(g_window);
+#else
     glfwSwapBuffers(g_window);
+#endif
 }
 
 static void glfw_error_callback(int error, const char* description)
@@ -200,11 +205,11 @@ int init_imgui()
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 
     // Load Fonts
-    io.Fonts->AddFontFromFileTTF("data/xkcd-script.ttf", 23.0f);
-    io.Fonts->AddFontFromFileTTF("data/xkcd-script.ttf", 18.0f);
-    io.Fonts->AddFontFromFileTTF("data/xkcd-script.ttf", 26.0f);
-    io.Fonts->AddFontFromFileTTF("data/xkcd-script.ttf", 32.0f);
-    io.Fonts->AddFontDefault();
+    // io.Fonts->AddFontFromFileTTF("data/xkcd-script.ttf", 23.0f);
+    // io.Fonts->AddFontFromFileTTF("data/xkcd-script.ttf", 18.0f);
+    // io.Fonts->AddFontFromFileTTF("data/xkcd-script.ttf", 26.0f);
+    // io.Fonts->AddFontFromFileTTF("data/xkcd-script.ttf", 32.0f);
+    // io.Fonts->AddFontDefault();
 #ifdef __EMSCRIPTEN__
     io.IniFilename = nullptr;
     ImGui_ImplGlfw_InstallEmscriptenCanvasResizeCallback("#canvas");
