@@ -1,19 +1,23 @@
 #include <stdio.h>
 
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
+#include <stdio.h>
+
+
+#define GL_SILENCE_DEPRECATION
+// #define GLFW_INCLUDE_ES3
+// #include <GLES3/gl3.h>
+#if defined(IMGUI_IMPL_OPENGL_ES2)
+#include <GLES2/gl2.h>
+#endif
+#include <GLFW/glfw3.h>
+
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 #include "./libs/emscripten/emscripten_mainloop_stub.h"
 #endif
-
-#define GLFW_INCLUDE_ES3
-#include <GLES3/gl3.h>
-#include <GLFW/glfw3.h>
-
-#include "imgui.h"
-#include "imgui_impl_glfw.h"
-#include "imgui_impl_opengl3.h"
-#include <iostream>
-
 
 GLFWwindow* g_window;
 ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
