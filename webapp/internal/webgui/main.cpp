@@ -2,6 +2,7 @@
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
+#include "./libs/emscripten/emscripten_mainloop_stub.h"
 #endif
 
 #define GLFW_INCLUDE_ES3
@@ -18,10 +19,11 @@ GLFWwindow* g_window;
 ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 bool show_demo_window = true;
 bool show_another_window = false;
-char* glsl_version;
+const char* glsl_version;
 int g_width;
 int g_height;
 
+#ifdef __EMSCRIPTEN__
 // Function used by c++ to get the size of the html canvas
 EM_JS(int, canvas_get_width, (), {
         return Module.canvas.width;
@@ -43,18 +45,22 @@ void on_size_changed()
 
     ImGui::SetCurrentContext(ImGui::GetCurrentContext());
 }
+#endif
 
 void loop()
 {
-    int width = canvas_get_width();
-    int height = canvas_get_height();
-
-    if (width != g_width || height != g_height)
-    {
-        g_width = width;
-        g_height = height;
-        on_size_changed();
-    }
+    // TODO don't think I need this with canvas resize callback
+// #ifdef __EMSCRIPTEN__
+//     int width = canvas_get_width();
+//     int height = canvas_get_height();
+// 
+//     if (width != g_width || height != g_height)
+//     {
+//         g_width = width;
+//         g_height = height;
+//         on_size_changed();
+//     }
+// #endif
 
     glfwPollEvents();
 
@@ -63,6 +69,8 @@ void loop()
     ImGui::NewFrame();
 
     // 1. Show a simple window.
+    if (show_demo_window)
+        ImGui::ShowDemoWindow(&show_demo_window);
     // Tip: if we don't call ImGui::Begin()/ImGui::End() the widgets automatically appears in a window called "Debug".
     {
         static float f = 0.0f;
@@ -102,19 +110,28 @@ void loop()
     ImGui::Render();
 
     int display_w, display_h;
-    glfwMakeContextCurrent(g_window);
+    // glfwMakeContextCurrent(g_window);
     glfwGetFramebufferSize(g_window, &display_w, &display_h);
     glViewport(0, 0, display_w, display_h);
-    glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
+    // glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
+    glClearColor(clear_color.x * clear_color.w,
+                 clear_color.y * clear_color.w,
+                 clear_color.z * clear_color.w,
+                 clear_color.w);
     glClear(GL_COLOR_BUFFER_BIT);
-
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-    glfwMakeContextCurrent(g_window);
+    // glfwMakeContextCurrent(g_window);
+    glfwSwapBuffers(g_window);
 }
 
+static void glfw_error_callback(int error, const char* description)
+{
+    fprintf(stderr, "GLFW Error %d: %s\n", error, description);
+}
 
 int init_gl()
 {
+    glfwSetErrorCallback(glfw_error_callback);
     if( !glfwInit() )
     {
         fprintf(stderr, "Failed to initialize GLFW\n" );
@@ -176,9 +193,6 @@ int init_imgui()
     // Setup style
     ImGui::StyleColorsDark();
 
-#ifdef __EMSCRIPTEN__
-    ImGui_ImplGlfw_InstallEmscriptenCanvasResizeCallback("#canvas");
-#endif
 
     ImGuiIO& io = ImGui::GetIO();
 
@@ -191,6 +205,10 @@ int init_imgui()
     io.Fonts->AddFontFromFileTTF("data/xkcd-script.ttf", 26.0f);
     io.Fonts->AddFontFromFileTTF("data/xkcd-script.ttf", 32.0f);
     io.Fonts->AddFontDefault();
+#ifdef __EMSCRIPTEN__
+    io.IniFilename = nullptr;
+    ImGui_ImplGlfw_InstallEmscriptenCanvasResizeCallback("#canvas");
+#endif
 
 
     // TODO
@@ -222,14 +240,27 @@ void quit()
 
 extern "C" int main(int argc, char** argv)
 {
+#ifdef __EMSCRIPTEN__
     g_width = canvas_get_width();
     g_height = canvas_get_height();
+#else
+    g_width = 500;
+    g_height = 500;
+#endif
     if (init() != 0) return 1;
 
 #ifdef __EMSCRIPTEN__
-    emscripten_set_main_loop(loop, 0, 1);
+    // emscripten_set_main_loop(loop, 0, 1);
+    EMSCRIPTEN_MAINLOOP_BEGIN
+#else
+    while (!glfwWindowShouldClose(g_window))
 #endif
-
+    {
+        loop();
+    }
+#ifdef __EMSCRIPTEN__
+    EMSCRIPTEN_MAINLOOP_END;
+#endif
     quit();
 
     return 0;
