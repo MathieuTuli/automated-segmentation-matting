@@ -1,4 +1,5 @@
 # CUSTOM
+*.ini
 **/__pycache__/**
 **/ckpts/**
 *.onnx
