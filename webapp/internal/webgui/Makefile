@@ -53,7 +53,13 @@ endif
 ifeq ($(UNAME_S), Darwin) #APPLE
 	ECHO_MESSAGE = "Mac OS X"
 	LIBS += -framework OpenGL -framework Cocoa -framework IOKit -framework CoreVideo
-	LIBS += -L/usr/local/lib -L/opt/local/lib -L/opt/homebrew/lib
+	LIBS += -L/usr/local/lib -L/opt/local/lib -L/opt/homebrew/lib 
+
+	# NFD shit
+	CXXFLAGS +=  -Iinclude/nfd
+	# LIBS += ./include/nfd/nfd_cocoa.m ${LIBS_DIR}/nfd/libnfd.a
+	LIBS += -framework AppKit -framework UniformTypeIdentifiers
+	LIBS += ${LIBS_DIR}/nfd/libnfd.a
 	#LIBS += -lglfw3
 	LIBS += -lglfw
 

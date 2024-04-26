@@ -1,9 +1,9 @@
 #include <stdio.h>
+#include <iostream>
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
-#include <stdio.h>
 
 
 #define GL_SILENCE_DEPRECATION
@@ -16,9 +16,10 @@
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
+#include <emscripten_file_browser.h>
 #include "./libs/emscripten/emscripten_mainloop_stub.h"
 #endif
-#include "./libs/ImGuiFileDialog/ImGuiFileDialog.h"
+#include "nfd.hpp"
 
 GLFWwindow* g_window;
 ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
@@ -50,22 +51,27 @@ void on_size_changed()
 
     ImGui::SetCurrentContext(ImGui::GetCurrentContext());
 }
+
+void handle_upload_file(std::string const &filename, std::string const &mime_type, std::string_view buffer, void*) {
+    // define a handler to process the file
+    // ...
+}
 #endif
 
 void loop()
 {
     // TODO don't think I need this with canvas resize callback
-// #ifdef __EMSCRIPTEN__
-//     int width = canvas_get_width();
-//     int height = canvas_get_height();
-// 
-//     if (width != g_width || height != g_height)
-//     {
-//         g_width = width;
-//         g_height = height;
-//         on_size_changed();
-//     }
-// #endif
+    // #ifdef __EMSCRIPTEN__
+    //     int width = canvas_get_width();
+    //     int height = canvas_get_height();
+    // 
+    //     if (width != g_width || height != g_height)
+    //     {
+    //         g_width = width;
+    //         g_height = height;
+    //         on_size_changed();
+    //     }
+    // #endif
 
     glfwPollEvents();
 
@@ -86,19 +92,25 @@ void loop()
         return;
     }
     if (ImGui::Button("Upload Video")) {
-        IGFD::FileDialogConfig config;
-        // TODO detect underlying system and set diff?
-        config.path = "/";
-        ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".*,.mp4", config);
-    }
-    if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey")) {
-        if (ImGuiFileDialog::Instance()->IsOk()) { // action if OK
-            std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
-            std::string filePath = ImGuiFileDialog::Instance()->GetCurrentPath();
-            // action
-        }
+#ifdef __EMSCRIPTEN__
+        emscripten_browser_file::upload(".mp4", handle_upload_file);
+#else
+        NFD::Guard nfdGuard;
+        // auto-freeing memory
+        NFD::UniquePath outPath;
 
-        ImGuiFileDialog::Instance()->Close();
+        // prepare filters for the dialog
+        nfdfilteritem_t filterItem[2] = {{"Source code", "c,cpp,cc"}, {"Headers", "h,hpp"}};
+        // show the dialog
+        nfdresult_t result = NFD::OpenDialog(outPath, filterItem, 2);
+        if (result == NFD_OKAY) {
+            std::cout << "Success!" << std::endl << outPath.get() << std::endl;
+        } else if (result == NFD_CANCEL) {
+            std::cout << "User pressed cancel." << std::endl;
+        } else {
+            std::cout << "Error: " << NFD::GetError() << std::endl;
+        }
+#endif
     }
 
     ImGui::End();
@@ -112,9 +124,9 @@ void loop()
     glViewport(0, 0, display_w, display_h);
     // glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
     glClearColor(clear_color.x * clear_color.w,
-                 clear_color.y * clear_color.w,
-                 clear_color.z * clear_color.w,
-                 clear_color.w);
+            clear_color.y * clear_color.w,
+            clear_color.z * clear_color.w,
+            clear_color.w);
     glClear(GL_COLOR_BUFFER_BIT);
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 #ifdef __EMSCRIPTEN__
@@ -167,8 +179,8 @@ int init_gl()
     int canvasWidth = g_width;
     int canvasHeight = g_height;
     g_window = glfwCreateWindow(
-        canvasWidth, canvasHeight,
-        "Automated Segementation Matting", NULL, NULL);
+            canvasWidth, canvasHeight,
+            "Automated Segementation Matting", NULL, NULL);
     if( g_window == NULL )
     {
         fprintf(stderr, "Failed to open GLFW window.\n" );
@@ -206,7 +218,7 @@ int init_imgui()
     // io.Fonts->AddFontFromFileTTF("data/xkcd-script.ttf", 32.0f);
     // io.Fonts->AddFontDefault();
 #ifdef __EMSCRIPTEN__
-    io.IniFilename = nullptr;
+    // io.IniFilename = nullptr;
     ImGui_ImplGlfw_InstallEmscriptenCanvasResizeCallback("#canvas");
 #endif
 
@@ -253,11 +265,11 @@ extern "C" int main(int argc, char** argv)
     // emscripten_set_main_loop(loop, 0, 1);
     EMSCRIPTEN_MAINLOOP_BEGIN
 #else
-    while (!glfwWindowShouldClose(g_window))
+        while (!glfwWindowShouldClose(g_window))
 #endif
-    {
-        loop();
-    }
+        {
+            loop();
+        }
 #ifdef __EMSCRIPTEN__
     EMSCRIPTEN_MAINLOOP_END;
 #endif
