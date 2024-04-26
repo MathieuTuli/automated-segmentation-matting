@@ -1,7 +1,5 @@
 #include <stdio.h>
-#include <format>
 #include <iostream>
-#include <fmt/core.h>
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -171,15 +169,16 @@ void loop()
 
 
     ImGuiWindowFlags window_flags = 0;
-    window_flags |= ImGuiWindowFlags_NoCollapse;
+    // window_flags |= ImGuiWindowFlags_NoCollapse;
     window_flags |= ImGuiWindowFlags_NoNav;
     ImGui::SetNextWindowPos(ImVec2(12.f, 12.f), ImGuiCond_Once);
     ImGui::SetNextWindowSize(ImVec2(300.f, 600.f), ImGuiCond_Once);
-    if (!ImGui::Begin("Automated Segmentation Matting", NULL, window_flags))
-    {
-        ImGui::End();
-        return;
-    }
+    // if (!ImGui::Begin("Menu", NULL, window_flags))
+    // {
+    //     ImGui::End();
+    //     return;
+    // }
+    ImGui::Begin("Menu", NULL, window_flags);
     if (ImGui::Button("Upload Video")) {
 #ifdef __EMSCRIPTEN__
         emscripten_browser_file::upload(".mp4", handle_upload_file);
@@ -189,7 +188,7 @@ void loop()
         NFD::UniquePath outPath;
 
         // prepare filters for the dialog
-        nfdfilteritem_t filterItem[2] = {{"Source code", "c,cpp,cc"}, {"Headers", "h,hpp"}};
+        nfdfilteritem_t filterItem[2] = {{"Videos", "mp4"}, {"Headers", "h,hpp"}};
         // show the dialog
         nfdresult_t result = NFD::OpenDialog(outPath, filterItem, 2);
         if (result == NFD_OKAY) {
