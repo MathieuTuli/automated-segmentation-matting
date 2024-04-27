@@ -136,11 +136,51 @@ void on_size_changed()
     ImGui::SetCurrentContext(ImGui::GetCurrentContext());
 }
 
-void handle_upload_file(std::string const &filename, std::string const &mime_type, std::string_view buffer, void*) {
-    // define a handler to process the file
-    // ...
+void handle_file_upload(std::string const &filename, std::string const &mime_type, std::string_view buffer, void*) {
+    std::cout << filename << std::endl;
+}
+#else
+void handle_file_upload(std::string const &filename) {
+    std::cout << filename << std::endl;
 }
 #endif
+
+uint8_t ErrorModal(const char * title, const char * err)
+{
+    // ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(),
+                            ImGuiCond_Appearing,
+                            ImVec2(0.5f, 0.5f));
+    ImGui::SetNextWindowSize(ImVec2(200.f, 100.f), ImGuiCond_Always);
+    ImGuiWindowFlags popup_flags = 0;
+    popup_flags |= ImGuiWindowFlags_NoNav;
+    popup_flags |= ImGuiWindowFlags_NoResize;
+    uint8_t ret = 0;
+    if (ImGui::BeginPopupModal(title, NULL, popup_flags))
+    {
+        ImGui::BeginChild("error message",
+                          ImVec2(ImGui::GetContentRegionAvail().x * 0.95f, 30.f),
+                          ImGuiChildFlags_None,
+                          ImGuiWindowFlags_HorizontalScrollbar);
+
+        ImGui::Text("something went wrong %s", err);
+        ImGui::EndChild();
+        ImGui::Separator();
+        if(ImGui::Button("o.k."))
+        {
+            ImGui::CloseCurrentPopup();
+            ret = 2;
+        }
+        ImGui::SameLine();
+        if(ImGui::Button("report"))
+        {
+            ImGui::CloseCurrentPopup();
+            ret = 1;
+        }
+        ImGui::EndPopup();
+    }
+    return ret;
+}
 
 void loop()
 {
@@ -163,7 +203,7 @@ void loop()
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
-    ImGui::SetNextWindowPos(ImVec2(g_width - 12.f, 12.f), ImGuiCond_Once);
+    ImGui::SetNextWindowPos(ImVec2(ImGui::GetMainViewport()->Size.x - 12.f, 12.f), ImGuiCond_Once);
     if (show_demo_window)
         ImGui::ShowDemoWindow(&show_demo_window);
 
@@ -178,28 +218,36 @@ void loop()
     //     ImGui::End();
     //     return;
     // }
-    ImGui::Begin("Menu", NULL, window_flags);
-    if (ImGui::Button("Upload Video")) {
+    ImGui::Begin("menu", NULL, window_flags);
 #ifdef __EMSCRIPTEN__
-        emscripten_browser_file::upload(".mp4", handle_upload_file);
-#else
-        NFD::Guard nfdGuard;
-        // auto-freeing memory
-        NFD::UniquePath outPath;
-
-        // prepare filters for the dialog
-        nfdfilteritem_t filterItem[2] = {{"Videos", "mp4"}, {"Headers", "h,hpp"}};
-        // show the dialog
-        nfdresult_t result = NFD::OpenDialog(outPath, filterItem, 2);
-        if (result == NFD_OKAY) {
-            std::cout << "Success!" << std::endl << outPath.get() << std::endl;
-        } else if (result == NFD_CANCEL) {
-            std::cout << "User pressed cancel." << std::endl;
-        } else {
-            std::cout << "Error: " << NFD::GetError() << std::endl;
-        }
-#endif
+    if (ImGui::Button("upload video")) {
+        emscripten_browser_file::upload(".mp4,.mov,.png,.jpg", handle_file_upload);
     }
+#else
+    nfdresult_t result = NFD_INVALID;
+    NFD::UniquePath outPath;
+    if (ImGui::Button("upload video")) {
+        NFD::Guard nfdGuard;
+        nfdfilteritem_t filterItem[1] ={{"Media", "mp4,mov,png,jpg"}};
+        result = NFD::OpenDialog(outPath, filterItem, 1);
+    }
+    if (result == NFD_OKAY)
+    {
+        std::cout << "uploading file:" << std::endl << outPath.get() << std::endl;
+        handle_file_upload(outPath.get());
+    }
+    else if (result == NFD_CANCEL)
+    {
+        std::cout << "file upload cancelled" << std::endl;
+        // ErrorModal("file upload error", "oopsie");
+        // ImGui::OpenPopup("test");
+    }
+    else if (result == NFD_ERROR)
+    {
+        std::cout << "file upload error" << NFD::GetError() << std::endl;
+    }
+#endif
+    // ErrorModal("test", "oopsie");
 
     ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
     static float progress = 0.0f, progress_dir = 1.0f;
@@ -218,16 +266,15 @@ void loop()
     ImGui::SameLine();
     ImGui::Text("%d%%", int(100. * IM_CLAMP(progress, 0.0f, 1.0f)));
 
-    ImGui::Button("Save Session");
+    ImGui::Button("save session");
     ImGui::SameLine();
-    ImGui::Button("Load Session");
+    ImGui::Button("lod session");
 
     // if(ImGui::CollapsingHeader("Effects", ImGuiTreeNodeFlags_DefaultOpen))
-    if(ImGui::CollapsingHeader("Effects"))
+    if(ImGui::CollapsingHeader("effects"))
     {
 
     }
-
     ImGui::End();
     ImGui::Render();
 
@@ -365,7 +412,7 @@ extern "C" int main(int argc, char** argv)
     g_height = canvas_get_height();
 #else
     g_width = 1000;
-    g_height = 1000;
+    g_height = 750;
 #endif
     if (init() != 0) return 1;
 

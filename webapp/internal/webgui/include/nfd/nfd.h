@@ -73,7 +73,8 @@ typedef unsigned int nfdfiltersize_t;
 typedef enum {
     NFD_ERROR, /**< Programmatic error */
     NFD_OKAY,  /**< User pressed okay, or successful return */
-    NFD_CANCEL /**< User pressed cancel */
+    NFD_CANCEL, /**< User pressed cancel */
+    NFD_INVALID,
 } nfdresult_t;
 
 /** @typedef UTF-8 Filter Item */
