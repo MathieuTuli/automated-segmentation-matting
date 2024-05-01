@@ -63,6 +63,9 @@ CPPFLAGS += -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends -Iinclude
 CPPFLAGS += -Wall -Wformat -Os $(EMS)
 LDFLAGS += --shell-file ./libs/emscripten/shell_minimal.html
 LDFLAGS += $(EMS)
+CPPFLAGS += $(shell pkg-config --cflags opencv4)
+CPPFLAGS += -I./include/opencv_wasm
+LDFLAGS += -L./include/opencv_wasm/lib -lopencv_calib3d -lopencv_dnn -lopencv_flann -lopencv_objdetect -lopencv_video -lopencv_core -lopencv_features2d -lopencv_imgproc -lopencv_photo
 
 ##---------------------------------------------------------------------
 ## BUILD RULES

@@ -1,5 +1,6 @@
 # CUSTOM
 compile_commands.json
+opencv_wasm
 **/tmp/**
 *.ini
 **/__pycache__/**
