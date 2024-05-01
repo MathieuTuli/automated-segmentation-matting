@@ -31,7 +31,7 @@ UNAME_S := $(shell uname -s)
 LINUX_GL_LIBS = -lGL
 
 LIBS =
-CXXFLAGS = -std=c++11 -g -Wall -Wformat
+CXXFLAGS = -std=c++17 -g -Wall -Wformat
 CXXFLAGS += -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends
 
 # NFD shit
