@@ -1,27 +1,11 @@
 #include <iostream>
-#include <vector>
-#include <stdio.h>
 
+#include "media_io.hpp"
 #include "utils.hpp"
 
 #include "imgui_impl_opengl3.h"
 #include "imgui_impl_glfw.h"
 #include "imgui.h"
-
-#include "opencv2/imgcodecs.hpp"
-#include "opencv2/highgui.hpp"
-#include "opencv2/imgproc.hpp"
-#include <opencv2/opencv.hpp>
-#include <opencv2/core.hpp>
-
-extern "C" {
-#include <libavformat/avformat.h>
-#include <libavcodec/avcodec.h>
-#include <libavutil/avutil.h>
-#include <libavutil/pixdesc.h>
-#include <libswscale/swscale.h>
-}
-
 
 #define GL_SILENCE_DEPRECATION
 #if defined(IMGUI_IMPL_OPENGL_ES2)
@@ -37,21 +21,15 @@ extern "C" {
 #include "nfd.hpp"
 #endif
 
-#define IM_CLAMP(V, MN, MX)     ((V) < (MN) ? (MN) : (V) > (MX) ? (MX) : (V))
+#define IM_CLAMP(V, MN, MX) ((V) < (MN) ? (MN) : (V) > (MX) ? (MX) : (V))
 
-GLFWwindow* g_window;
-ImVec4 clear_color = ImVec4(0.17f, 0.17f, 0.17f, 1.00f);
-bool show_demo_window = true;
-bool show_another_window = false;
-const char* glsl_version;
 int g_width;
 int g_height;
-
-void load_frames(std::string const &filename)
-{
-    // cv::threshold( src_gray, dst, threshold_value, max_binary_value, threshold_type );
-    std::cout << filename << std::endl;
-}
+GLFWwindow* g_window;
+const char* glsl_version;
+bool show_demo_window = true;
+bool show_another_window = false;
+ImVec4 clear_color = ImVec4(0.17f, 0.17f, 0.17f, 1.00f);
 
 #ifdef __EMSCRIPTEN__
 // Function used by c++ to get the size of the html canvas
@@ -84,7 +62,7 @@ EMSCRIPTEN_KEEPALIVE void handle_file_upload(std::string const &filename,
     // It will load the file, then I clear it
     // need an alternative
     std::cout << filename << std::endl;
-    load_frames(filename);
+    load_file(filename.c_str());
 }
 #endif
 
@@ -179,7 +157,7 @@ void loop()
     if (result == NFD_OKAY)
     {
         std::cout << "uploading file:" << std::endl << outPath.get() << std::endl;
-        load_frames(outPath.get());
+        load_file(outPath.get());
     }
     else if (result == NFD_CANCEL)
     {
