@@ -27,7 +27,6 @@ SOURCES += $(IMGUI_DIR)/backends/imgui_impl_glfw.cpp $(IMGUI_DIR)/backends/imgui
 SOURCES += $(IMGUI_DIR)/imgui.cpp $(IMGUI_DIR)/imgui_demo.cpp $(IMGUI_DIR)/imgui_draw.cpp $(IMGUI_DIR)/imgui_tables.cpp $(IMGUI_DIR)/imgui_widgets.cpp
 # OBJS = $(addsuffix .o, $(basename $(notdir $(SOURCES))))
 OBJS := $(SOURCES:%=$(BUILD_DIR)/%.o)
-UNAME_S := $(shell uname -s)
 LINUX_GL_LIBS = -lGL
 
 LIBS =

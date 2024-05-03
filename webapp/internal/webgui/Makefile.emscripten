@@ -1,50 +1,44 @@
 #
-# Makefile to use with GLFW+emscripten
-# See https://emscripten.org/docs/getting_started/downloads.html
-# for installation instructions.
+# Cross Platform Makefile
+# Compatible with MSYS2/MINGW, Ubuntu 14.04.1 and Mac OS X
 #
-# This Makefile assumes you have loaded emscripten's environment.
-# (On Windows, you may need to execute emsdk_env.bat or encmdprompt.bat ahead)
-#
-# Running `make -f Makefile.emscripten` will produce three files:
-#  - build/index.html
-#  - build/index.js
-#  - build/index.wasm
-#
-# All three are needed to run the demo.
+# You will need GLFW (http://www.glfw.org):
+# Linux:
+#   apt-get install libglfw-dev
+# Mac OS X:
+#   brew install glfw
+# MSYS2:
+#   pacman -S --noconfirm --needed mingw-w64-x86_64-toolchain mingw-w64-x86_64-glfw
+# >>> compiledb make
+
+#CXX = g++
+#CXX = clang++
 
 CC = emcc
 CXX = em++
-WEB_DIR = build
 
-EXE = $(WEB_DIR)/index.html
-IMGUI_DIR = ./include/imgui
+SRC_DIRS = ./src
+BUILD_DIR = ./build
+EXE = index.html 
+
 LIBS_DIR = ./libs
-SOURCES = main.cpp
-SOURCES += $(IMGUI_DIR)/imgui.cpp $(IMGUI_DIR)/imgui_demo.cpp $(IMGUI_DIR)/imgui_draw.cpp $(IMGUI_DIR)/imgui_tables.cpp $(IMGUI_DIR)/imgui_widgets.cpp
+IMGUI_DIR = ./include/imgui
+
+# SOURCES = src/main.cpp
+SOURCES := $(shell find $(SRC_DIRS) -name '*.cpp' -or -name '*.c' -or -name '*.s')
 SOURCES += $(IMGUI_DIR)/backends/imgui_impl_glfw.cpp $(IMGUI_DIR)/backends/imgui_impl_opengl3.cpp
-OBJS = $(addsuffix .o, $(basename $(notdir $(SOURCES))))
-UNAME_S := $(shell uname -s)
-CPPFLAGS =
-LDFLAGS =
-EMS =
+SOURCES += $(IMGUI_DIR)/imgui.cpp $(IMGUI_DIR)/imgui_demo.cpp $(IMGUI_DIR)/imgui_draw.cpp $(IMGUI_DIR)/imgui_tables.cpp $(IMGUI_DIR)/imgui_widgets.cpp
+# OBJS = $(addsuffix .o, $(basename $(notdir $(SOURCES))))
+OBJS := $(SOURCES:%=$(BUILD_DIR)/%.o)
+LINUX_GL_LIBS = -lGL
 
-##---------------------------------------------------------------------
-## EMSCRIPTEN OPTIONS
-##---------------------------------------------------------------------
+LIBS =
+CXXFLAGS = -std=c++17 -g -Wall -Wformat
+CXXFLAGS += -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends
 
-# ("EMS" options gets added to both CPPFLAGS and LDFLAGS, whereas some options are for linker only)
 EMS += -s DISABLE_EXCEPTION_CATCHING=1
-LDFLAGS += -s USE_GLFW=3 -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -s NO_EXIT_RUNTIME=0 -s ASSERTIONS=1 -s EXPORTED_FUNCTIONS=_main,_malloc,_free -s EXPORTED_RUNTIME_METHODS=ccall
+LIBS += -s USE_GLFW=3 -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -s NO_EXIT_RUNTIME=0 -s ASSERTIONS=1 -s EXPORTED_FUNCTIONS=_main,_malloc,_free -s EXPORTED_RUNTIME_METHODS=ccall
 
-# Uncomment next line to fix possible rendering bugs with Emscripten version older then 1.39.0 (https://github.com/ocornut/imgui/issues/2877)
-#EMS += -s BINARYEN_TRAP_MODE=clamp
-#EMS += -s SAFE_HEAP=1    ## Adds overhead
-
-# Emscripten allows preloading a file or folder to be accessible at runtime.
-# The Makefile for this example project suggests embedding the misc/fonts/ folder into our application, it will then be accessible as "/fonts"
-# See documentation for more details: https://emscripten.org/docs/porting/files/packaging_files.html
-# (Default value is 0. Set to 1 to enable file-system and include the misc/fonts/ folder as part of the build.)
 USE_FILE_SYSTEM ?= 1
 ifeq ($(USE_FILE_SYSTEM), 0)
 LDFLAGS += -s NO_FILESYSTEM=1
@@ -54,15 +48,11 @@ ifeq ($(USE_FILE_SYSTEM), 1)
 LDFLAGS += --no-heap-copy -O2 --preload-file ./data@/data
 endif
 
-##---------------------------------------------------------------------
-## FINAL BUILD FLAGS
-##---------------------------------------------------------------------
-
 CPPFLAGS += -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends -Iinclude
 #CPPFLAGS += -g
 CPPFLAGS += -Wall -Wformat -Os $(EMS)
-LDFLAGS += --shell-file ./libs/emscripten/shell_minimal.html
-LDFLAGS += $(EMS)
+LIBS += --shell-file ./libs/emscripten/shell_minimal.html
+LIBS += $(EMS)
 CPPFLAGS += $(shell pkg-config --cflags opencv4)
 CPPFLAGS += -I./include/opencv_wasm
 LDFLAGS += -L./include/opencv_wasm/lib -lopencv_calib3d -lopencv_dnn -lopencv_flann -lopencv_objdetect -lopencv_video -lopencv_core -lopencv_features2d -lopencv_imgproc -lopencv_photo
@@ -71,26 +61,25 @@ LDFLAGS += -L./include/opencv_wasm/lib -lopencv_calib3d -lopencv_dnn -lopencv_fl
 ## BUILD RULES
 ##---------------------------------------------------------------------
 
-%.o:%.cpp
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
+# The final build step.
+$(BUILD_DIR)/$(EXE): $(OBJS) $(BUILD_DIR)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LIBS) -o $@ $^ 
 
-%.o:$(IMGUI_DIR)/%.cpp
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
+# Build step for C source
+$(BUILD_DIR)/%.c.o: %.c
+	mkdir -p $(dir $@)
+	$(CC) $(CPPFLAGS) $(CXXFLAGS) $(CFLAGS) -c -o $@ $< 
 
-%.o:$(IMGUI_DIR)/backends/%.cpp
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
+# Build step for C++ source
+$(BUILD_DIR)/%.cpp.o: %.cpp
+	mkdir -p $(dir $@)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $< 
 
-all: $(EXE)
-	@echo Build complete for $(EXE)
-
-$(WEB_DIR):
+$(BUILD_DIR):
 	mkdir $@
 
-serve: all
-	python3 -m http.server -d $(WEB_DIR)
-
-$(EXE): $(OBJS) $(WEB_DIR)
-	$(CXX) -o $@ $(OBJS) $(LDFLAGS)
+all: $(EXE)
+	@echo Build complete for $(ECHO_MESSAGE)
 
 clean:
-	rm -rf $(OBJS) $(WEB_DIR)
+	rm -f $(EXE) $(OBJS)

@@ -21,6 +21,13 @@ void load_file(const char* filename)
 {
     //cv::threshold(src_gray, dst, threshold_value, max_binary_value, threshold_type );
     std::cout << filename << std::endl;
+    // if image 
+    // else if video
+}
+
+void read_image(const char* filename) 
+{
+    cv::imread(filename);
 }
 
 void read_video(const char* filename)
