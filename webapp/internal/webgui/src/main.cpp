@@ -1,7 +1,8 @@
 #include <iostream>
 
-#include "media_io.hpp"
 #include "utils.hpp"
+#include "modals.hpp"
+#include "media_io.hpp"
 #include "deferred_render.cpp"
 
 #include "imgui.h"
@@ -24,13 +25,11 @@
 
 #define IM_CLAMP(V, MN, MX) ((V) < (MN) ? (MN) : (V) > (MX) ? (MX) : (V))
 
-int g_width;
-int g_height;
-GLFWwindow *g_window;
-const char *glsl_version;
-bool show_demo_window = true;
-bool show_another_window = false;
-ImVec4 clear_color = ImVec4(0.17f, 0.17f, 0.17f, 1.00f);
+int G_WIDTH;
+int G_HEIGHT;
+GLFWwindow *G_WINDOW;
+const char *GLSL_VERSION;
+ImVec4 CLEAR_COLOR = ImVec4(0.17f, 0.17f, 0.17f, 1.00f);
 
 #ifdef __EMSCRIPTEN__
 // Function used by c++ to get the size of the html canvas
@@ -43,7 +42,7 @@ EM_JS(int, canvas_get_height, (), { return Module.canvas.height; });
 EM_JS(void, resizeCanvas, (), { js_resizeCanvas(); });
 
 void on_size_changed() {
-    glfwSetWindowSize(g_window, g_width, g_height);
+    glfwSetWindowSize(G_WINDOW, G_WIDTH, G_HEIGHT);
     ImGui::SetCurrentContext(ImGui::GetCurrentContext());
 }
 
@@ -58,48 +57,16 @@ EMSCRIPTEN_KEEPALIVE void handle_file_upload(std::string const &filename,
 }
 #endif
 
-
-int ErrorModal(const char *title, const char *err) {
-    // ImGui::SetNextItemOpen(true, ImGuiCond_Always);
-    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(),
-            ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-    ImGui::SetNextWindowSize(ImVec2(200.f, 100.f), ImGuiCond_Always);
-    ImGuiWindowFlags popup_flags = 0;
-    popup_flags |= ImGuiWindowFlags_NoNav;
-    popup_flags |= ImGuiWindowFlags_NoResize;
-    int ret = 0;
-    if (ImGui::BeginPopupModal(title, NULL, popup_flags)) {
-        ImGui::BeginChild(
-                "error message", ImVec2(ImGui::GetContentRegionAvail().x * 0.95f, 30.f),
-                ImGuiChildFlags_None, ImGuiWindowFlags_HorizontalScrollbar);
-
-        ImGui::Text("something went wrong %s", err);
-        ImGui::EndChild();
-        ImGui::Separator();
-        if (ImGui::Button("o.k.")) {
-            ImGui::CloseCurrentPopup();
-            ret = 1;
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("report")) {
-            ImGui::CloseCurrentPopup();
-            ret = 2;
-        }
-        ImGui::EndPopup();
-    }
-    return ret;
-}
-
 void loop() {
     // TODO don't think I need this with canvas resize callback
     // #ifdef __EMSCRIPTEN__
     //     int width = canvas_get_width();
     //     int height = canvas_get_height();
     //
-    //     if (width != g_width || height != g_height)
+    //     if (width != G_WIDTH || height != G_HEIGHT)
     //     {
-    //         g_width = width;
-    //         g_height = height;
+    //         G_WIDTH = width;
+    //         G_HEIGHT = height;
     //         on_size_changed();
     //     }
     // #endif
@@ -112,21 +79,15 @@ void loop() {
 
     ImGui::SetNextWindowPos(ImVec2(ImGui::GetMainViewport()->Size.x - 12.f, 12.f),
             ImGuiCond_Once);
-    if (show_demo_window)
-        ImGui::ShowDemoWindow(&show_demo_window);
-
+    ImGui::ShowDemoWindow();
     ImGui::ShowIDStackToolWindow();
+
 
     ImGuiWindowFlags window_flags = 0;
     // window_flags |= ImGuiWindowFlags_NoCollapse;
     window_flags |= ImGuiWindowFlags_NoNav;
     ImGui::SetNextWindowPos(ImVec2(12.f, 12.f), ImGuiCond_Once);
     ImGui::SetNextWindowSize(ImVec2(300.f, 600.f), ImGuiCond_Once);
-    // if (!ImGui::Begin("Menu", NULL, window_flags))
-    // {
-    //     ImGui::End();
-    //     return;
-    // }
     ImGui::Begin("menu", NULL, window_flags);
 #ifdef __EMSCRIPTEN__
     if (ImGui::Button("upload video")) {
@@ -145,26 +106,23 @@ void loop() {
         load_file(outPath.get());
     } else if (result == NFD_CANCEL) {
         std::cout << "file upload cancelled" << std::endl;
-        // ErrorModal("file upload error", "oopsie");
-        RegisterForDeferredRender([](const char *title, const char *msg){
-                if(!ImGui::IsPopupOpen("file upload error"))
-                    ImGui::OpenPopup("file upload error");
-                int ret = ErrorModal(title, msg);
-                if (ret == 1){
-                std::cout << "they clicked ok" << std::endl;
-                }
-                else if (ret == 2)
-                {
-                std::cout << "they clicked report" << std::endl;
-                }
-                return ret;
-                }, "file upload error", "err");
     } else if (result == NFD_ERROR) {
         std::cout << "file upload error" << NFD::GetError() << std::endl;
+        RegisterForDeferredRendering([](const char *title, const char *msg){
+            if(!ImGui::IsPopupOpen("file upload error"))
+                ImGui::OpenPopup("file upload error");
+            int ret = ErrorModal(title, msg);
+            if (ret == 1){
+            std::cout << "they clicked ok" << std::endl;
+            }
+            else if (ret == 2)
+            {
+            std::cout << "they clicked report" << std::endl;
+            }
+            return ret;
+            }, "file upload error", NFD::GetError());
     }
 #endif
-    // ErrorModal("test", "oopsie");
-
     ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
     static float progress = 0.0f, progress_dir = 1.0f;
     static bool animate = true;
@@ -180,9 +138,6 @@ void loop() {
         }
     }
 
-    // Typically we would use ImVec2(-1.0f,0.0f) or ImVec2(-FLT_MIN,0.0f) to use
-    // all available width, or ImVec2(width,0.0f) for a specified width.
-    // ImVec2(0.0f,0.0f) uses ItemWidth.
     const char *empty = "";
     ImGui::ProgressBar(progress, ImVec2(100.0f, 0.0f), empty);
     ImGui::SameLine();
@@ -192,12 +147,8 @@ void loop() {
     ImGui::SameLine();
     ImGui::Button("lod session");
 
-    // if(ImGui::CollapsingHeader("Effects", ImGuiTreeNodeFlags_DefaultOpen))
-    if (ImGui::CollapsingHeader("effects")) {
+    if (ImGui::CollapsingHeader("effects")) { // ImGuiTreeNodeFlags_DefaultOpen
     }
-    // for (const DeferredDisplay<const char*, const char*> &deferred : DeferredRegister<const char*, const char*>) {
-    //     std::apply(deferred.callable, deferred.args);
-    // }
     int i = 0;
     while (i < DeferredRegister<const char*, const char*>.size())
     {
@@ -211,20 +162,20 @@ void loop() {
     ImGui::End();
     ImGui::Render();
 #ifdef __EMSCRIPTEN__
-    glfwMakeContextCurrent(g_window);
+    glfwMakeContextCurrent(G_WINDOW);
 #endif
     int display_w, display_h;
-    glfwGetFramebufferSize(g_window, &display_w, &display_h);
+    glfwGetFramebufferSize(G_WINDOW, &display_w, &display_h);
     glViewport(0, 0, display_w, display_h);
-    // glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
-    glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w,
-            clear_color.z * clear_color.w, clear_color.w);
+    // glClearColor(CLEAR_COLOR.x, CLEAR_COLOR.y, CLEAR_COLOR.z, CLEAR_COLOR.w);
+    glClearColor(CLEAR_COLOR.x * CLEAR_COLOR.w, CLEAR_COLOR.y * CLEAR_COLOR.w,
+            CLEAR_COLOR.z * CLEAR_COLOR.w, CLEAR_COLOR.w);
     glClear(GL_COLOR_BUFFER_BIT);
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 #ifdef __EMSCRIPTEN__
-    glfwMakeContextCurrent(g_window);
+    glfwMakeContextCurrent(G_WINDOW);
 #else
-    glfwSwapBuffers(g_window);
+    glfwSwapBuffers(G_WINDOW);
 #endif
 }
 
@@ -244,20 +195,20 @@ int init_gl() {
     // Decide GL+GLSL versions
 #if defined(IMGUI_IMPL_OPENGL_ES2)
     // GL ES 2.0 + GLSL 100
-    glsl_version = "#version 100";
+    GLSL_VERSION = "#version 100";
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
     glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
 #elif defined(__APPLE__)
     // GL 3.2 + GLSL 150
-    glsl_version = "#version 150";
+    GLSL_VERSION = "#version 150";
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // 3.2+ only
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // Required on Mac
 #else
     // GL 3.0 + GLSL 130
-    glsl_version = "#version 130";
+    GLSL_VERSION = "#version 130";
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
     // glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 3.2+
@@ -265,16 +216,16 @@ int init_gl() {
 #endif
 
     // Open a window and create its OpenGL context
-    int canvasWidth = g_width;
-    int canvasHeight = g_height;
-    g_window = glfwCreateWindow(canvasWidth, canvasHeight,
+    int canvasWidth = G_WIDTH;
+    int canvasHeight = G_HEIGHT;
+    G_WINDOW = glfwCreateWindow(canvasWidth, canvasHeight,
             "Automated Segementation Matting", NULL, NULL);
-    if (g_window == NULL) {
+    if (G_WINDOW == NULL) {
         fprintf(stderr, "Failed to open GLFW window.\n");
         glfwTerminate();
         return -1;
     }
-    glfwMakeContextCurrent(g_window); // Initialize GLEW
+    glfwMakeContextCurrent(G_WINDOW); // Initialize GLEW
     glfwSwapInterval(1);              // Enable vsync
 
     return 0;
@@ -284,8 +235,8 @@ int init_imgui() {
     // Setup Dear ImGui binding
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-    ImGui_ImplGlfw_InitForOpenGL(g_window, true);
-    ImGui_ImplOpenGL3_Init(glsl_version);
+    ImGui_ImplGlfw_InitForOpenGL(G_WINDOW, true);
+    ImGui_ImplOpenGL3_Init(GLSL_VERSION);
 
     // Setup style
     PickUpAPencil();
@@ -318,17 +269,17 @@ void quit() {
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
 
-    glfwDestroyWindow(g_window);
+    glfwDestroyWindow(G_WINDOW);
     glfwTerminate();
 }
 
 extern "C" int main(int argc, char **argv) {
 #ifdef __EMSCRIPTEN__
-    g_width = canvas_get_width();
-    g_height = canvas_get_height();
+    G_WIDTH = canvas_get_width();
+    G_HEIGHT = canvas_get_height();
 #else
-    g_width = 1000;
-    g_height = 750;
+    G_WIDTH = 1000;
+    G_HEIGHT = 750;
 #endif
     if (init() != 0)
         return 1;
@@ -337,7 +288,7 @@ extern "C" int main(int argc, char **argv) {
     // emscripten_set_main_loop(loop, 0, 1);
     EMSCRIPTEN_MAINLOOP_BEGIN
 #else
-        while (!glfwWindowShouldClose(g_window))
+        while (!glfwWindowShouldClose(G_WINDOW))
 #endif
         {
             loop();
