@@ -16,9 +16,9 @@
 #include <GLFW/glfw3.h>
 
 #ifdef __EMSCRIPTEN__
-#include "../libs/emscripten/emscripten_mainloop_stub.h"
+#include "third_party/emscripten/emscripten_mainloop_stub.h"
+#include "third_party/emscripten/emscripten_file_browser.h"
 #include <emscripten.h>
-#include <emscripten_file_browser.h>
 #else
 #include "nfd.hpp"
 #endif
@@ -29,6 +29,9 @@ int G_WIDTH;
 int G_HEIGHT;
 GLFWwindow *G_WINDOW;
 const char *GLSL_VERSION;
+GLuint my_image_texture = 0;
+int my_image_width = 0;
+int my_image_height = 0;
 ImVec4 CLEAR_COLOR = ImVec4(0.17f, 0.17f, 0.17f, 1.00f);
 
 #ifdef __EMSCRIPTEN__
@@ -53,7 +56,9 @@ EMSCRIPTEN_KEEPALIVE void handle_file_upload(std::string const &filename,
     // It will load the file, then I clear it
     // need an alternative
     std::cout << filename << std::endl;
-    load_buffer(buffer);
+    // load_buffer(buffer);
+    bool ret = load_file(filename, &my_image_texture, &my_image_width, &my_image_height);
+    IM_ASSERT(ret);
 }
 #endif
 
@@ -68,6 +73,7 @@ void loop() {
             ImGuiCond_Once);
     ImGui::ShowDemoWindow();
     ImGui::ShowIDStackToolWindow();
+    ImGui::ShowMetricsWindow();
 
 
     ImGuiWindowFlags window_flags = 0;
@@ -89,7 +95,8 @@ void loop() {
     }
     if (result == NFD_OKAY) {
         std::cout << "uploading file:" << std::endl << outPath.get() << std::endl;
-        load_file(outPath.get());
+        bool ret = load_file(outPath.get(), &my_image_texture, &my_image_width, &my_image_height);
+        IM_ASSERT(ret);
     } else if (result == NFD_CANCEL) {
         std::cout << "file upload cancelled" << std::endl;
     } else if (result == NFD_ERROR) {
@@ -109,6 +116,7 @@ void loop() {
             }, "file upload error", NFD::GetError());
     }
 #endif
+    ImGui::Image((void*)(intptr_t)my_image_texture, ImVec2(my_image_width, my_image_height));
     ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
     static float progress = 0.0f, progress_dir = 1.0f;
     static bool animate = true;
@@ -203,7 +211,7 @@ int init_gl() {
     int canvasWidth = G_WIDTH;
     int canvasHeight = G_HEIGHT;
     G_WINDOW = glfwCreateWindow(canvasWidth, canvasHeight,
-            "Automated Segementation Matting", NULL, NULL);
+            "float", NULL, NULL);
     if (G_WINDOW == NULL) {
         fprintf(stderr, "Failed to open GLFW window.\n");
         glfwTerminate();
