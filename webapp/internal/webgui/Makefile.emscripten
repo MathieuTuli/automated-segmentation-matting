@@ -37,7 +37,7 @@ CXXFLAGS = -std=c++17 -g -Wall -Wformat
 CXXFLAGS += -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends
 
 EMS += -s DISABLE_EXCEPTION_CATCHING=1
-LIBS += -s USE_GLFW=3 -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -s NO_EXIT_RUNTIME=0 -s ASSERTIONS=1 -s EXPORTED_FUNCTIONS=_main,_malloc,_free -s EXPORTED_RUNTIME_METHODS=ccall
+LDFLAGS = -s USE_GLFW=3 -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -s NO_EXIT_RUNTIME=0 -s ASSERTIONS=1 -s EXPORTED_FUNCTIONS=_main,_malloc,_free -s EXPORTED_RUNTIME_METHODS=ccall
 
 USE_FILE_SYSTEM ?= 1
 ifeq ($(USE_FILE_SYSTEM), 0)
@@ -62,8 +62,8 @@ LDFLAGS += -L./include/opencv_wasm/lib -lopencv_calib3d -lopencv_dnn -lopencv_fl
 ##---------------------------------------------------------------------
 
 # The final build step.
-$(BUILD_DIR)/$(EXE): $(OBJS) $(BUILD_DIR)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LIBS) -o $@ $^ 
+$(BUILD_DIR)/$(EXE): $(OBJS)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) $(LIBS) -o $@ $^ 
 
 # Build step for C source
 $(BUILD_DIR)/%.c.o: %.c
@@ -78,8 +78,11 @@ $(BUILD_DIR)/%.cpp.o: %.cpp
 $(BUILD_DIR):
 	mkdir $@
 
-all: $(EXE)
+all: ${BUILD_DIR}/$(EXE)
 	@echo Build complete for $(ECHO_MESSAGE)
+
+serve: all
+	python3 -m http.server -d $(BUILD_DIR)
 
 clean:
 	rm -f $(EXE) $(OBJS)

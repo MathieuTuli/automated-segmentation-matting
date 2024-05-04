@@ -8,13 +8,13 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/core.hpp>
 
-extern "C" {
-#include <libavformat/avformat.h>
-#include <libavcodec/avcodec.h>
-#include <libavutil/avutil.h>
-#include <libavutil/pixdesc.h>
-#include <libswscale/swscale.h>
-}
+// extern "C" {
+// #include <libavformat/avformat.h>
+// #include <libavcodec/avcodec.h>
+// #include <libavutil/avutil.h>
+// #include <libavutil/pixdesc.h>
+// #include <libswscale/swscale.h>
+// }
 
 
 void load_file(const char* filename)
