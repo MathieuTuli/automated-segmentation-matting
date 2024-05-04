@@ -35,26 +35,32 @@ CXXFLAGS = -std=c++17 -g -Wall -Wformat
 CXXFLAGS += -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends
 
 # NFD shit
-CXXFLAGS +=  -Iinclude/nfd
-LIBS += -framework AppKit -framework UniformTypeIdentifiers
-LIBS += ${LIBS_DIR}/nfd/libnfd.a
+CXXFLAGS += -I./include/nfd
 
 ifeq ($(UNAME_S), Linux) #LINUX
 	ECHO_MESSAGE = "Linux"
-	LIBS += $(LINUX_GL_LIBS) `pkg-config --static --libs glfw3`
-	CXXFLAGS += `pkg-config --cflags glfw3`
+	LIBS += $(LINUX_GL_LIBS) $(shell pkg-config --static --libs glfw3)
+	LIBS += $(shell pkg-config --libs opencv4)
+	LIBS += -L/usr/local/lib
+	LIBS += ${LIBS_DIR}/nfd_linux/libnfd.a
+	CXXFLAGS += $(shell pkg-config --cflags glfw3)
+	CXXFLAGS += $(shell pkg-config --cflags opencv4)
+	CXXFLAGS += $(shell pkg-config --cflags --libs gtk+-3.0)
+	CXXFLAGS += -I/usr/local/include
 	CFLAGS = $(CXXFLAGS)
 endif
 
 ifeq ($(UNAME_S), Darwin) #APPLE
 	ECHO_MESSAGE = "Mac OS X"
 	LIBS += -framework OpenGL -framework Cocoa -framework IOKit -framework CoreVideo
+	LIBS += -lglfw
+	LIBS += ${LIBS_DIR}/nfd_linux/libnfd.a
 	LIBS += -L/usr/local/lib -L/opt/homebrew/lib 
 	LIBS += $(shell pkg-config --libs opencv4)
-	CXXFLAGS += $(shell pkg-config --cflags opencv4)
 	LIBS += -L /opt/homebrew/opt/ffmpeg/lib -lavformat -lpostproc -lavcodec -lswscale -lavfilter -lavutil -lswresample -lavdevice
+	LIBS += -framework AppKit -framework UniformTypeIdentifiers
 	#LIBS += -lglfw3
-	LIBS += -lglfw
+	CXXFLAGS += $(shell pkg-config --cflags opencv4)
 	CXXFLAGS += -I/usr/local/include -I/opt/homebrew/include
 	CFLAGS = $(CXXFLAGS)
 endif
