@@ -53,24 +53,11 @@ EMSCRIPTEN_KEEPALIVE void handle_file_upload(std::string const &filename,
     // It will load the file, then I clear it
     // need an alternative
     std::cout << filename << std::endl;
-    load_file(filename.c_str());
+    load_buffer(buffer);
 }
 #endif
 
 void loop() {
-    // TODO don't think I need this with canvas resize callback
-    // #ifdef __EMSCRIPTEN__
-    //     int width = canvas_get_width();
-    //     int height = canvas_get_height();
-    //
-    //     if (width != G_WIDTH || height != G_HEIGHT)
-    //     {
-    //         G_WIDTH = width;
-    //         G_HEIGHT = height;
-    //         on_size_changed();
-    //     }
-    // #endif
-
     glfwPollEvents();
 
     ImGui_ImplOpenGL3_NewFrame();
@@ -84,7 +71,6 @@ void loop() {
 
 
     ImGuiWindowFlags window_flags = 0;
-    // window_flags |= ImGuiWindowFlags_NoCollapse;
     window_flags |= ImGuiWindowFlags_NoNav;
     ImGui::SetNextWindowPos(ImVec2(12.f, 12.f), ImGuiCond_Once);
     ImGui::SetNextWindowSize(ImVec2(300.f, 600.f), ImGuiCond_Once);
@@ -167,7 +153,6 @@ void loop() {
     int display_w, display_h;
     glfwGetFramebufferSize(G_WINDOW, &display_w, &display_h);
     glViewport(0, 0, display_w, display_h);
-    // glClearColor(CLEAR_COLOR.x, CLEAR_COLOR.y, CLEAR_COLOR.z, CLEAR_COLOR.w);
     glClearColor(CLEAR_COLOR.x * CLEAR_COLOR.w, CLEAR_COLOR.y * CLEAR_COLOR.w,
             CLEAR_COLOR.z * CLEAR_COLOR.w, CLEAR_COLOR.w);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -215,7 +200,6 @@ int init_gl() {
     // only glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // 3.0+ only
 #endif
 
-    // Open a window and create its OpenGL context
     int canvasWidth = G_WIDTH;
     int canvasHeight = G_HEIGHT;
     G_WINDOW = glfwCreateWindow(canvasWidth, canvasHeight,
@@ -232,29 +216,20 @@ int init_gl() {
 }
 
 int init_imgui() {
-    // Setup Dear ImGui binding
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGui_ImplGlfw_InitForOpenGL(G_WINDOW, true);
     ImGui_ImplOpenGL3_Init(GLSL_VERSION);
-
-    // Setup style
     PickUpAPencil();
 
     ImGuiIO &io = ImGui::GetIO();
-
-    // Enable Keyboard Controls
-    // io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 
     // Load Fonts
     io.Fonts->AddFontFromFileTTF("data/poppins.ttf", 16.0f);
     io.Fonts->AddFontDefault();
 #ifdef __EMSCRIPTEN__
-    // io.IniFilename = nullptr;
     ImGui_ImplGlfw_InstallEmscriptenCanvasResizeCallback("#canvas");
 #endif
-    // TODO
-    // resizeCanvas();
     return 0;
 }
 
@@ -288,11 +263,9 @@ extern "C" int main(int argc, char **argv) {
     // emscripten_set_main_loop(loop, 0, 1);
     EMSCRIPTEN_MAINLOOP_BEGIN
 #else
-        while (!glfwWindowShouldClose(G_WINDOW))
+    while (!glfwWindowShouldClose(G_WINDOW))
 #endif
-        {
-            loop();
-        }
+    { loop(); }
 #ifdef __EMSCRIPTEN__
     EMSCRIPTEN_MAINLOOP_END;
 #endif
