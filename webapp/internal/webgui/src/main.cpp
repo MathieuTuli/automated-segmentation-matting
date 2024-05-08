@@ -55,10 +55,10 @@ EMSCRIPTEN_KEEPALIVE void handle_file_upload(std::string const &filename,
     // TODO this is not efficient:
     // It will load the file, then I clear it
     // need an alternative
-    std::cout << filename << std::endl;
+    std::cout << filename << mime_type << std::endl;
     // load_buffer(buffer);
-    bool ret = load_file(filename, &my_image_texture, &my_image_width, &my_image_height);
-    IM_ASSERT(ret);
+    // bool ret = load_file(filename, &my_image_texture, &my_image_width, &my_image_height);
+    // IM_ASSERT(ret);
 }
 #endif
 
@@ -72,7 +72,11 @@ void loop() {
     ImGui::SetNextWindowPos(ImVec2(ImGui::GetMainViewport()->Size.x - 12.f, 12.f),
             ImGuiCond_Once);
     ImGui::ShowDemoWindow();
+    ImGui::SetNextWindowPos(ImVec2(ImGui::GetMainViewport()->Size.x / 2.f, 12.f),
+            ImGuiCond_Once);
     ImGui::ShowIDStackToolWindow();
+    ImGui::SetNextWindowPos(ImVec2(ImGui::GetMainViewport()->Size.x / 2.f, 100.f),
+            ImGuiCond_Once);
     ImGui::ShowMetricsWindow();
 
 
