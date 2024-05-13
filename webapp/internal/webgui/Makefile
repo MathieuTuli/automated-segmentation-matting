@@ -54,7 +54,7 @@ ifeq ($(UNAME_S), Darwin) #APPLE
 	ECHO_MESSAGE = "Mac OS X"
 	LIBS += -framework OpenGL -framework Cocoa -framework IOKit -framework CoreVideo
 	LIBS += -lglfw
-	LIBS += ${LIBS_DIR}/nfd_linux/libnfd.a
+	LIBS += ${LIBS_DIR}/nfd/libnfd.a
 	LIBS += -L/usr/local/lib -L/opt/homebrew/lib 
 	LIBS += $(shell pkg-config --libs opencv4)
 	LIBS += -L /opt/homebrew/opt/ffmpeg/lib -lavformat -lpostproc -lavcodec -lswscale -lavfilter -lavutil -lswresample -lavdevice

@@ -28,6 +28,7 @@ bool load_file(const char* filename, GLuint* out_texture, int* out_width, int* o
     // else if video
     // bool LoadTextureFromFile(const char* filename, GLuint* out_texture, int* out_width, int* out_height)
     // Load from file
+    /*
     int image_width = 0;
     int image_height = 0;
     unsigned char* image_data = stbi_load(filename, &image_width, &image_height, NULL, 4);
@@ -57,13 +58,14 @@ bool load_file(const char* filename, GLuint* out_texture, int* out_width, int* o
     *out_height = image_height;
 
     std::cout << "done" << std::endl;
+    */
     return true;
 }
 
 
 bool load_buffer(const std::string_view &buffer, GLuint* out_texture, int* out_width, int* out_height)
 {
-    std::vector<uchar> data(buffer.begin(), buffer.end());
+    // std::vector<uchar> data(buffer.begin(), buffer.end());
     // cv::Mat img = imdecode(data, cv::IMREAD_COLOR);
     return false;
 }
